@@ -80,6 +80,7 @@ async fn server_survives_descriptor_exhaustion() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,

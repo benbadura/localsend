@@ -73,6 +73,7 @@ class Translations with BaseTranslations<AppLocale, Translations> {
   late final Translations$tray$en tray = Translations$tray$en.internal(_root);
   late final Translations$web$en web = Translations$web$en.internal(_root);
   late final Translations$assetPicker$en assetPicker = Translations$assetPicker$en.internal(_root);
+  late final Translations$chat$en chat = Translations$chat$en.internal(_root);
 }
 
 // Path: general
@@ -945,6 +946,127 @@ class Translations$assetPicker$en {
 
   /// en: 'count'
   String get sUnitAssetCountLabel => 'count';
+}
+
+// Path: chat
+class Translations$chat$en {
+  Translations$chat$en.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Messages'
+  String get title => 'Messages';
+
+  /// en: 'New conversation'
+  String get newConversation => 'New conversation';
+
+  /// en: 'Start a conversation with a nearby device.'
+  String get empty => 'Start a conversation with a nearby device.';
+
+  /// en: 'Select a conversation or start a new one.'
+  String get selectConversation => 'Select a conversation or start a new one.';
+
+  /// en: 'No HTTPS devices found. Both devices need this fork and LocalSend running.'
+  String get noDevices => 'No HTTPS devices found. Both devices need this fork and LocalSend running.';
+
+  /// en: 'No messages yet.'
+  String get noMessages => 'No messages yet.';
+
+  /// en: 'Search this conversation'
+  String get search => 'Search this conversation';
+
+  /// en: 'Older messages'
+  String get loadMore => 'Older messages';
+
+  /// en: 'Write a message'
+  String get writeMessage => 'Write a message';
+
+  /// en: 'Send'
+  String get send => 'Send';
+
+  /// en: 'Copy'
+  String get copy => 'Copy';
+
+  /// en: 'Delete locally'
+  String get deleteLocal => 'Delete locally';
+
+  /// en: 'Retry'
+  String get retry => 'Retry';
+
+  /// en: 'Clear conversation history'
+  String get clearHistory => 'Clear conversation history';
+
+  /// en: 'Delete messages from this device? The other device keeps its copy.'
+  String get clearHistoryBody => 'Delete messages from this device? The other device keeps its copy.';
+
+  /// en: 'Revoke permission to receive'
+  String get revokeConsent => 'Revoke permission to receive';
+
+  /// en: 'New conversation request'
+  String get contactRequest => 'New conversation request';
+
+  /// en: '{alias} wants to send you messages. Allow this device to send future messages automatically?'
+  String contactRequestBody({required Object alias}) =>
+      '${alias} wants to send you messages. Allow this device to send future messages automatically?';
+
+  /// en: 'Available in LAN'
+  String get online => 'Available in LAN';
+
+  /// en: 'Not currently discovered'
+  String get offlineLabel => 'Not currently discovered';
+
+  /// en: 'The device is unavailable. You can retry this message when it returns to LAN.'
+  String get offline => 'The device is unavailable. You can retry this message when it returns to LAN.';
+
+  /// en: 'This device is unavailable or does not support chat. Both devices need this fork.'
+  String get unavailable => 'This device is unavailable or does not support chat. Both devices need this fork.';
+
+  /// en: 'Enable encryption in Settings to send chat messages.'
+  String get requiresHttps => 'Enable encryption in Settings to send chat messages.';
+
+  /// en: 'Message storage is unavailable. File transfers remain available.'
+  String get storageError => 'Message storage is unavailable. File transfers remain available.';
+
+  /// en: 'The message could not be delivered. You can retry it.'
+  String get sendError => 'The message could not be delivered. You can retry it.';
+
+  /// en: 'A message can contain at most 64 KiB of UTF-8 text.'
+  String get tooLong => 'A message can contain at most 64 KiB of UTF-8 text.';
+
+  /// en: 'Delivery is unconfirmed. Retry checks the receiver before sending again.'
+  String get unconfirmed => 'Delivery is unconfirmed. Retry checks the receiver before sending again.';
+
+  /// en: 'Declined'
+  String get declined => 'Declined';
+
+  /// en: 'Not delivered'
+  String get failed => 'Not delivered';
+
+  /// en: 'Sending'
+  String get sending => 'Sending';
+
+  /// en: 'Delivered'
+  String get delivered => 'Delivered';
+
+  /// en: 'Disappear after delivery'
+  String get disappearing => 'Disappear after delivery';
+
+  /// en: 'Off'
+  String get off => 'Off';
+
+  /// en: '5 minutes'
+  String get fiveMinutes => '5 minutes';
+
+  /// en: '1 hour'
+  String get oneHour => '1 hour';
+
+  /// en: '24 hours'
+  String get oneDay => '24 hours';
+
+  /// en: '7 days'
+  String get oneWeek => '7 days';
 }
 
 // Path: receiveTab.infoBox

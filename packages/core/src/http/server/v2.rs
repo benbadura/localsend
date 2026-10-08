@@ -26,6 +26,22 @@ use uuid::Uuid;
 /// Events emitted by the v2 HTTP server that must be handled by the application.
 #[derive(Debug)]
 pub enum ServerEventV2 {
+    /// A chat message from a certificate-authenticated peer, independent of file sessions.
+    ChatMessage {
+        request_id: String,
+        ip: PeerIp,
+        fingerprint: String,
+        message: crate::http::chat::ChatMessageRequest,
+        reply_tx: oneshot::Sender<crate::http::chat::ChatReply>,
+    },
+    /// A peer requests its own receipt; no text is returned.
+    ChatStatus {
+        request_id: String,
+        fingerprint: String,
+        message_id: String,
+        reply_tx: oneshot::Sender<crate::http::chat::ChatReply>,
+    },
+    ChatRequestEnded { request_id: String },
     /// A device registered itself via `POST /api/localsend/v2/register`.
     ///
     /// On TLS, this event is only emitted when `info.fingerprint` matches the

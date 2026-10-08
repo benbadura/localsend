@@ -28,6 +28,9 @@ use tokio::sync::{Mutex, mpsc, oneshot};
 /// including the interface scope, which the Rust HTTP client accepts back as
 /// a host.
 pub enum RsServerEvent {
+    ChatMessage { request_id: String, ip: String, fingerprint: String, info: RegisterDtoV2, message_id: String, text: String, ttl_seconds: Option<u32> },
+    ChatStatus { request_id: String, fingerprint: String, message_id: String },
+    ChatRequestEnded { request_id: String },
     /// A device registered itself via `POST /api/localsend/v2/register`.
     ///
     /// On TLS, this event is only emitted when `info.fingerprint` matches the
@@ -110,6 +113,7 @@ pub enum RsServerEvent {
 }
 
 pub struct RsHttpServer {
+    pending_chat: Mutex<HashMap<String, oneshot::Sender<localsend::http::chat::ChatReply>>>,
     instance: Arc<ServerInstance>,
     event_rx: Mutex<Option<mpsc::Receiver<ServerEventV2>>>,
     pending_decision: Mutex<Option<(String, oneshot::Sender<PrepareUploadDecisionV2>)>>,
@@ -209,6 +213,7 @@ pub async fn start_server(
     fingerprint: String,
     pin: Option<String>,
     verify_checksums: bool,
+    chat_enabled: bool,
     web: WebParams,
     show_token: Option<String>,
 ) -> anyhow::Result<RsHttpServer> {
@@ -253,6 +258,7 @@ pub async fn start_server(
         None => (None, None),
     };
 
+    let chat_enabled = chat_enabled && tls.is_some();
     let handle = localsend::http::server::start_with_port(
         port,
         tls,
@@ -265,6 +271,7 @@ pub async fn start_server(
         },
         internal_config,
         Some(ServerConfigV2 {
+            chat_enabled,
             pin,
             verify_checksums,
             event_tx,
@@ -281,6 +288,7 @@ pub async fn start_server(
     *running_server = Some(instance.clone());
 
     Ok(RsHttpServer {
+        pending_chat: Mutex::new(HashMap::new()),
         instance,
         event_rx: Mutex::new(Some(event_rx)),
         pending_decision: Mutex::new(None),
@@ -293,6 +301,19 @@ pub async fn start_server(
 }
 
 impl RsHttpServer {
+    pub async fn respond_chat(
+        &self,
+        request_id: String,
+        status: u16,
+        receipt_json: Option<String>,
+    ) -> anyhow::Result<()> {
+        let receipt = receipt_json.map(|json| serde_json::from_str(&json)).transpose()?;
+        if let Some(tx) = self.pending_chat.lock().await.remove(&request_id) {
+            let _ = tx.send(localsend::http::chat::ChatReply { status, receipt });
+        }
+        Ok(())
+    }
+
     /// Emits server events until the server is stopped.
     /// Can only be listened to once.
     ///
@@ -361,6 +382,30 @@ impl RsHttpServer {
         event: ServerEventV2,
     ) -> bool {
         match event {
+            ServerEventV2::ChatMessage { request_id, ip, fingerprint, message, reply_tx } => {
+                let mut pending = self.pending_chat.lock().await;
+                pending.retain(|_, tx| !tx.is_closed());
+                pending.insert(request_id.clone(), reply_tx);
+                sink.add(RsServerEvent::ChatMessage {
+                    request_id,
+                    ip: ip.to_string(),
+                    fingerprint,
+                    info: message.info,
+                    message_id: message.message_id,
+                    text: message.text,
+                    ttl_seconds: message.ttl_seconds,
+                }).is_ok()
+            }
+            ServerEventV2::ChatStatus { request_id, fingerprint, message_id, reply_tx } => {
+                let mut pending = self.pending_chat.lock().await;
+                pending.retain(|_, tx| !tx.is_closed());
+                pending.insert(request_id.clone(), reply_tx);
+                sink.add(RsServerEvent::ChatStatus { request_id, fingerprint, message_id }).is_ok()
+            }
+            ServerEventV2::ChatRequestEnded { request_id } => {
+                self.pending_chat.lock().await.remove(&request_id);
+                sink.add(RsServerEvent::ChatRequestEnded { request_id }).is_ok()
+            }
             ServerEventV2::Register { ip, info } => sink
                 .add(RsServerEvent::Register {
                     ip: ip.to_string(),

@@ -29,6 +29,19 @@ class ParentIsolateStateMapper extends ClassMapperBase<ParentIsolateState> {
     _$syncState,
   );
   static IsolateConnector<
+    IsolateTaskStreamResult<ChatResult>,
+    SendToIsolateData<IsolateTask<ChatTask>>
+  >?
+  _$chat(ParentIsolateState v) => v.chat;
+  static const Field<
+    ParentIsolateState,
+    IsolateConnector<
+      IsolateTaskStreamResult<ChatResult>,
+      SendToIsolateData<IsolateTask<ChatTask>>
+    >
+  >
+  _f$chat = Field('chat', _$chat, opt: true);
+  static IsolateConnector<
     IsolateTaskStreamResult<DiscoveryResult>,
     SendToIsolateData<IsolateTask<DiscoveryTask>>
   >?
@@ -71,6 +84,7 @@ class ParentIsolateStateMapper extends ClassMapperBase<ParentIsolateState> {
   @override
   final MappableFields<ParentIsolateState> fields = const {
     #syncState: _f$syncState,
+    #chat: _f$chat,
     #discovery: _f$discovery,
     #httpUpload: _f$httpUpload,
     #httpServer: _f$httpServer,
@@ -79,6 +93,7 @@ class ParentIsolateStateMapper extends ClassMapperBase<ParentIsolateState> {
   static ParentIsolateState _instantiate(DecodingData data) {
     return ParentIsolateState(
       syncState: data.dec(_f$syncState),
+      chat: data.dec(_f$chat),
       discovery: data.dec(_f$discovery),
       httpUpload: data.dec(_f$httpUpload),
       httpServer: data.dec(_f$httpServer),
@@ -160,6 +175,11 @@ abstract class ParentIsolateStateCopyWith<
   $R call({
     SyncState? syncState,
     IsolateConnector<
+      IsolateTaskStreamResult<ChatResult>,
+      SendToIsolateData<IsolateTask<ChatTask>>
+    >?
+    chat,
+    IsolateConnector<
       IsolateTaskStreamResult<DiscoveryResult>,
       SendToIsolateData<IsolateTask<DiscoveryTask>>
     >?
@@ -194,12 +214,14 @@ class _ParentIsolateStateCopyWithImpl<$R, $Out>
   @override
   $R call({
     SyncState? syncState,
+    Object? chat = $none,
     Object? discovery = $none,
     Object? httpUpload = $none,
     Object? httpServer = $none,
   }) => $apply(
     FieldCopyWithData({
       if (syncState != null) #syncState: syncState,
+      if (chat != $none) #chat: chat,
       if (discovery != $none) #discovery: discovery,
       if (httpUpload != $none) #httpUpload: httpUpload,
       if (httpServer != $none) #httpServer: httpServer,
@@ -208,6 +230,7 @@ class _ParentIsolateStateCopyWithImpl<$R, $Out>
   @override
   ParentIsolateState $make(CopyWithData data) => ParentIsolateState(
     syncState: data.get(#syncState, or: $value.syncState),
+    chat: data.get(#chat, or: $value.chat),
     discovery: data.get(#discovery, or: $value.discovery),
     httpUpload: data.get(#httpUpload, or: $value.httpUpload),
     httpServer: data.get(#httpServer, or: $value.httpServer),

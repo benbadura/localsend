@@ -144,6 +144,8 @@ fn handle_server_event(
     match event {
         // Peers answer the startup announcement by registering here; this is
         // how the destination usually enters the device store.
+        ServerEventV2::ChatMessage { reply_tx, .. } | ServerEventV2::ChatStatus { reply_tx, .. } => { let _ = reply_tx.send(localsend::http::chat::ChatReply { status: 404, receipt: None }); }
+        ServerEventV2::ChatRequestEnded { .. } => {}
         ServerEventV2::Register { ip, info } => {
             discovery::device_confirmed(
                 discovery,

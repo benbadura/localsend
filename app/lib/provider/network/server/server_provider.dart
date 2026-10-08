@@ -5,6 +5,7 @@ import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/cross_file.dart';
 import 'package:localsend_app/model/state/server/server_state.dart';
 import 'package:localsend_app/model/state/server/web_share_state.dart';
+import 'package:localsend_app/provider/chat_provider.dart';
 import 'package:localsend_app/provider/network/server/controller/receive_controller.dart';
 import 'package:localsend_app/provider/network/server/controller/send_controller.dart';
 import 'package:localsend_app/provider/network/server/server_utils.dart';
@@ -152,6 +153,7 @@ class ServerService extends Notifier<ServerState?> {
               _ => settings.receivePin,
             },
             verifyChecksums: settings.verifyChecksums,
+            chatEnabled: ref.read(chatProvider).ready,
             web: WebParams(
               mode: switch (web) {
                 WebShareDownload(:final state, :final pin) => WebMode.download(
@@ -337,6 +339,10 @@ class ServerService extends Notifier<ServerState?> {
 
   void _handleEvent(HttpServerEvent event) {
     switch (event) {
+      case HttpServerChatEvent():
+        unawaited(ref.redux(chatProvider).dispatchAsync(ReceiveChatAction(event)));
+      case HttpServerChatEndedEvent():
+        ref.redux(chatProvider).dispatch(ChatRequestEndedAction(event.requestId));
       case HttpServerStartedEvent():
         break;
       case HttpServerRegisterEvent():

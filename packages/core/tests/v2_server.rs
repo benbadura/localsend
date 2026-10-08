@@ -62,6 +62,8 @@ async fn start_test_server_with_verification(
         async move {
             while let Some(event) = event_rx.recv().await {
                 match event {
+                    ServerEventV2::ChatMessage { reply_tx, .. } | ServerEventV2::ChatStatus { reply_tx, .. } => { let _ = reply_tx.send(localsend::http::chat::ChatReply { status: 404, receipt: None }); }
+                    ServerEventV2::ChatRequestEnded { .. } => {}
                     ServerEventV2::Register { .. } => {}
                     ServerEventV2::PrepareUpload {
                         files, decision_tx, ..
@@ -138,6 +140,7 @@ async fn start_test_server_with_verification(
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin,
             verify_checksums,
             event_tx,
@@ -1039,6 +1042,7 @@ async fn test_prepare_upload_aborted_by_sender_disconnect() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,
@@ -1141,6 +1145,7 @@ async fn test_prepare_upload_cancelled_by_session_less_cancel() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,
@@ -1276,6 +1281,7 @@ async fn test_prepare_upload_aborted_by_sender_disconnect_tls() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,

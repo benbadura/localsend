@@ -119,6 +119,7 @@ class _PublishSyncStateAction extends ReduxAction<IsolateController, ParentIsola
 
   @override
   ParentIsolateState reduce() {
+    state.chat?.sendToIsolate(SendToIsolateData(syncState: syncState, data: null));
     state.discovery?.sendToIsolate(
       SendToIsolateData(
         syncState: syncState,

@@ -3,56 +3,65 @@ name: Build linux x64 deb
 on:
   workflow_dispatch:
   workflow_call:
-
-env:
-  FLUTTER_VERSION: "3.41.9"
+    inputs:
+      ref:
+        description: Commit or tag to build (defaults to the triggering ref)
+        type: string
+        default: ""
 
 jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.get_version.outputs.version }}
+      flutter: ${{ steps.get_version.outputs.flutter }}
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
 
       - name: Get version from pubspec.yaml
         id: get_version
         run: |
-          VERSION=$(sed -n 's/^version: \([0-9]*\.[0-9]*\.[0-9]*\).*/\1/p' app/pubspec.yaml)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          VERSION=$(sed -n 's/^version: \([^+]*\).*/\1/p' app/pubspec.yaml)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          python3 -c 'import json; print("flutter=" + json.load(open(".fvmrc"))["flutter"])' >> "$GITHUB_OUTPUT"
 
   build_deb_x86_64:
     needs: build
     runs-on: ubuntu-22.04
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake libgtk-3-dev ninja-build libayatana-appindicator3-dev
+          sudo apt-get install -y clang cmake pkg-config libgtk-3-dev ninja-build libayatana-appindicator3-dev liblzma-dev libstdc++-12-dev
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
+          flutter-version: ${{ needs.build.outputs.flutter }}
           channel: "stable"
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-
-      - name: Check rust-toolchain.toml
-        working-directory: packages/localsend_isolates
-        run: rustup show
+      - name: Install pinned Rust toolchain
+        run: rustup toolchain install --profile minimal
 
       - name: Enable dart_distributor
-        run: dart pub global activate flutter_distributor
+        run: dart pub global activate flutter_distributor 0.6.10
 
       - name: Update PATH
-        run: echo 'export PATH="$PATH:$HOME/.pub-cache/bin"' >> ~/.bashrc
+        run: echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
+
+      - name: Dependencies
+        working-directory: app
+        run: flutter pub get
 
       - name: Build deb package
         working-directory: app
@@ -60,21 +69,19 @@ jobs:
 
       - name: Find deb file
         id: find_deb
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
-          VERSION=${{ needs.build.outputs.version }}
-          DEB_PATH=$(find app/dist -name "localsend_app-$VERSION*-linux.deb")
-          echo "deb_path=$DEB_PATH" >> $GITHUB_OUTPUT
-
-      - name: Check if deb file exists
-        id: check_file
-        run: |
-          if [[ ! -f "${{ steps.find_deb.outputs.deb_path }}" ]]; then
-            echo "File not found: ${{ steps.find_deb.outputs.deb_path }}"
+          mapfile -t DEBS < <(find app/dist -type f -name "localsend_app-$VERSION*-linux.deb")
+          if [[ ${#DEBS[@]} -ne 1 ]]; then
+            echo "Expected exactly one DEB package, found ${#DEBS[@]}."
             exit 1
           fi
+          echo "deb_path=${DEBS[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Upload deb file
         uses: actions/upload-artifact@v6
         with:
           name: deb-x86-64-result
           path: ${{ steps.find_deb.outputs.deb_path }}
+          if-no-files-found: error

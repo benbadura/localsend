@@ -71,6 +71,7 @@ async fn start_register_server(
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,

@@ -93,6 +93,8 @@ class TranslationsPl extends Translations with BaseTranslations<AppLocale, Trans
   late final _Translations$web$pl web = _Translations$web$pl._(_root);
   @override
   late final _Translations$assetPicker$pl assetPicker = _Translations$assetPicker$pl._(_root);
+  @override
+  late final _Translations$chat$pl chat = _Translations$chat$pl._(_root);
 }
 
 // Path: general
@@ -754,6 +756,90 @@ class _Translations$assetPicker$pl extends Translations$assetPicker$en {
   String get sNameDurationLabel => 'czas trwania';
   @override
   String get sUnitAssetCountLabel => 'liczba';
+}
+
+// Path: chat
+class _Translations$chat$pl extends Translations$chat$en {
+  _Translations$chat$pl._(TranslationsPl root) : this._root = root, super.internal(root);
+
+  final TranslationsPl _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Wiadomości';
+  @override
+  String get newConversation => 'Nowa rozmowa';
+  @override
+  String get empty => 'Rozpocznij rozmowę z urządzeniem w pobliżu.';
+  @override
+  String get selectConversation => 'Wybierz rozmowę lub rozpocznij nową.';
+  @override
+  String get noDevices => 'Nie znaleziono urządzeń HTTPS. Oba urządzenia muszą mieć uruchomiony ten fork LocalSend.';
+  @override
+  String get noMessages => 'Brak wiadomości.';
+  @override
+  String get search => 'Szukaj w rozmowie';
+  @override
+  String get loadMore => 'Starsze wiadomości';
+  @override
+  String get writeMessage => 'Napisz wiadomość';
+  @override
+  String get send => 'Wyślij';
+  @override
+  String get copy => 'Kopiuj';
+  @override
+  String get deleteLocal => 'Usuń lokalnie';
+  @override
+  String get retry => 'Ponów';
+  @override
+  String get clearHistory => 'Wyczyść historię rozmowy';
+  @override
+  String get clearHistoryBody => 'Usunąć wiadomości z tego urządzenia? Drugie urządzenie zachowa swoją kopię.';
+  @override
+  String get revokeConsent => 'Cofnij zgodę na odbieranie';
+  @override
+  String get contactRequest => 'Prośba o rozmowę';
+  @override
+  String contactRequestBody({required Object alias}) =>
+      '${alias} chce wysyłać Ci wiadomości. Zezwolić temu urządzeniu na automatyczne wysyłanie kolejnych wiadomości?';
+  @override
+  String get online => 'Dostępne w LAN';
+  @override
+  String get offlineLabel => 'Obecnie niewykryte';
+  @override
+  String get offline => 'Urządzenie jest niedostępne. Możesz ponowić wiadomość, gdy wróci do LAN.';
+  @override
+  String get unavailable => 'Urządzenie jest niedostępne lub nie obsługuje czatu. Oba urządzenia potrzebują tego forka.';
+  @override
+  String get requiresHttps => 'Włącz szyfrowanie w ustawieniach, aby wysyłać wiadomości czatu.';
+  @override
+  String get storageError => 'Magazyn wiadomości jest niedostępny. Przesyłanie plików nadal działa.';
+  @override
+  String get sendError => 'Nie udało się dostarczyć wiadomości. Możesz ją ponowić.';
+  @override
+  String get tooLong => 'Wiadomość może mieć najwyżej 64 KiB tekstu UTF-8.';
+  @override
+  String get unconfirmed => 'Dostarczenie niepotwierdzone. Ponowienie sprawdzi odbiorcę przed kolejną wysyłką.';
+  @override
+  String get declined => 'Odrzucona';
+  @override
+  String get failed => 'Niedostarczona';
+  @override
+  String get sending => 'Wysyłanie';
+  @override
+  String get delivered => 'Dostarczona';
+  @override
+  String get disappearing => 'Znikanie po dostarczeniu';
+  @override
+  String get off => 'Wyłączone';
+  @override
+  String get fiveMinutes => '5 minut';
+  @override
+  String get oneHour => '1 godzina';
+  @override
+  String get oneDay => '24 godziny';
+  @override
+  String get oneWeek => '7 dni';
 }
 
 // Path: receiveTab.infoBox

@@ -1,5 +1,8 @@
+export 'package:localsend_isolates/src/isolate/child/chat_isolate.dart' show ChatTask, ChatOpenTask, ChatStoreTask, ChatNetworkTask;
 export 'package:localsend_isolates/src/isolate/child/server_isolate.dart'
     show
+        HttpServerChatEvent,
+        HttpServerChatEndedEvent,
         HttpServerCancelReceivedEvent,
         HttpServerEvent,
         HttpServerFileUploadEvent,

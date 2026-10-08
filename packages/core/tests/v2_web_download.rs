@@ -140,6 +140,7 @@ async fn start_test_server(
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx: v2_event_tx,
@@ -310,6 +311,7 @@ async fn test_upload_page() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx: v2_event_tx,
@@ -365,6 +367,7 @@ async fn test_custom_web_pages() {
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx: v2_event_tx,

@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+pub mod chat;
 pub mod client;
 pub mod dto;
 pub mod dto_v2;

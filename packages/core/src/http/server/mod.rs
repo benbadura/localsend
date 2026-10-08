@@ -1,4 +1,5 @@
 pub mod common;
+mod chat;
 mod connection_limit;
 pub mod internal;
 mod peer_ip;
@@ -38,6 +39,8 @@ use web::WebState;
 
 /// Configuration for the v2 (legacy) protocol endpoints.
 pub struct ServerConfigV2 {
+    /// Enables the fork chat API. Only meaningful with TLS and an application handler.
+    pub chat_enabled: bool,
     /// Optional PIN that senders must provide via the `pin` query parameter.
     pub pin: Option<String>,
 
@@ -52,6 +55,8 @@ pub struct ServerConfigV2 {
 
 /// Runtime state of the v2 protocol endpoints.
 pub(crate) struct V2State {
+    pub(crate) chat_enabled: bool,
+    pub(crate) chat_requests: Arc<tokio::sync::Semaphore>,
     /// Optional PIN required for prepare-upload requests.
     pub(crate) pin: Option<String>,
 
@@ -101,6 +106,8 @@ impl AppState {
     ) -> Self {
         let v2 = v2_config.map(|config| {
             Arc::new(V2State {
+                chat_enabled: config.chat_enabled,
+                chat_requests: Arc::new(tokio::sync::Semaphore::new(16)),
                 pin: config.pin,
                 verify_checksums: config.verify_checksums,
                 event_tx: config.event_tx,
@@ -622,6 +629,10 @@ async fn handle_request_inner(mut req: Request<Incoming>) -> Result<Response<Box
     let Some(client_info) = req.extensions_mut().remove::<RequestClientInfo>() else {
         return Err(AppError::Status(StatusCode::INTERNAL_SERVER_ERROR));
     };
+
+    if req.uri().path().starts_with("/api/localsend/chat/v1/") {
+        return chat::handle(req, state, client_info).await;
+    }
 
     let v2_enabled = state.v2.is_some();
 

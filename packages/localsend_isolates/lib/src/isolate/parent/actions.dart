@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:localsend_isolates/model/device.dart';
 import 'package:localsend_isolates/rust/api/server.dart' show WebParams;
+import 'package:localsend_isolates/src/isolate/child/chat_isolate.dart';
 import 'package:localsend_isolates/src/isolate/child/discovery_isolate.dart';
 import 'package:localsend_isolates/src/isolate/child/server_isolate.dart';
 import 'package:localsend_isolates/src/isolate/child/upload_isolate.dart';
@@ -304,6 +305,7 @@ class IsolateHttpServerStartAction extends ReduxActionWithResult<IsolateControll
   /// Whether the SHA-256 checksums that senders provide for their files are
   /// verified after receiving.
   final bool verifyChecksums;
+  final bool chatEnabled;
 
   /// Configures the pages served to browsers: the download page (web download),
   /// the upload page, or the 403 page when web share is disabled.
@@ -316,6 +318,7 @@ class IsolateHttpServerStartAction extends ReduxActionWithResult<IsolateControll
   IsolateHttpServerStartAction({
     required this.pin,
     required this.verifyChecksums,
+    this.chatEnabled = false,
     required this.web,
     required this.showToken,
   });
@@ -333,6 +336,7 @@ class IsolateHttpServerStartAction extends ReduxActionWithResult<IsolateControll
         task: HttpServerStartTask(
           pin: pin,
           verifyChecksums: verifyChecksums,
+          chatEnabled: chatEnabled,
           web: web,
           showToken: showToken,
         ),
@@ -573,5 +577,37 @@ extension _WrappedTaskConnector<R, T> on IsolateConnector<IsolateTaskStreamResul
     });
 
     return convertResponseToStream(taskId: wrappedTask.id);
+  }
+}
+
+/// Executes chat storage/network tasks in their dedicated isolate.
+class IsolateChatAction extends AsyncReduxActionWithResult<IsolateController, ParentIsolateState, Object?> {
+  final ChatTask task;
+  IsolateChatAction(this.task);
+  @override
+  Future<(ParentIsolateState, Object?)> reduce() async {
+    final connection = state.chat;
+    if (connection == null) throw StateError('Chat isolate unavailable');
+    final result = await connection.sendWrappedTaskAndListenStream(task: task).first.timeout(const Duration(seconds: 135));
+    return (state, result.value);
+  }
+}
+
+class IsolateChatReplyAction extends ReduxAction<IsolateController, ParentIsolateState> {
+  final String requestId;
+  final int status;
+  final String? receiptJson;
+  IsolateChatReplyAction({required this.requestId, required this.status, this.receiptJson});
+  @override
+  ParentIsolateState reduce() {
+    state.httpServer?.sendToIsolate(
+      SendToIsolateData(
+        syncState: null,
+        data: IsolateTask(
+          data: HttpServerChatReplyTask(requestId: requestId, status: status, receiptJson: receiptJson),
+        ),
+      ),
+    );
+    return state;
   }
 }

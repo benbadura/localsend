@@ -1,3 +1,4 @@
+pub mod chat;
 pub mod cancel;
 pub mod crypto;
 pub mod discovery;

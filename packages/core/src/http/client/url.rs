@@ -13,6 +13,7 @@ pub struct TargetUrl<'a> {
 }
 
 pub enum ApiVersion {
+    ChatV1,
     V2,
     V3,
 }
@@ -33,6 +34,7 @@ impl<'a> TargetUrl<'a> {
             },
             self.port,
             match self.version {
+                ApiVersion::ChatV1 => "chat/v1",
                 ApiVersion::V2 => "v2",
                 ApiVersion::V3 => "v3",
             },

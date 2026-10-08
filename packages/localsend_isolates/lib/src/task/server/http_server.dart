@@ -23,6 +23,7 @@ class HttpServerService {
     required String fingerprint,
     required String? pin,
     required bool verifyChecksums,
+    bool chatEnabled = false,
     required WebParams web,
     required String? showToken,
   }) async {
@@ -40,12 +41,16 @@ class HttpServerService {
       fingerprint: fingerprint,
       pin: pin,
       verifyChecksums: verifyChecksums,
+      chatEnabled: chatEnabled,
       web: web,
       showToken: showToken,
     );
     _server = server;
     return server.listen();
   }
+
+  Future<void> respondChat({required String requestId, required int status, String? receiptJson}) =>
+      _requireServer().respondChat(requestId: requestId, status: status, receiptJson: receiptJson);
 
   /// Answers a pending prepare-upload request.
   /// [acceptedFileIds] is the subset of the offered files to accept; `null` declines the request.

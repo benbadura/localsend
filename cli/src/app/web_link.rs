@@ -208,6 +208,7 @@ impl App {
             identity.client_info(),
             None,
             Some(ServerConfigV2 {
+            chat_enabled: false,
                 pin: None,
                 verify_checksums: true,
                 event_tx: self.server_tx.clone(),

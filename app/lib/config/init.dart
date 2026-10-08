@@ -13,14 +13,13 @@ import 'package:localsend_app/pages/home_page_controller.dart';
 import 'package:localsend_app/pages/whats_new_page.dart';
 import 'package:localsend_app/provider/animation_provider.dart';
 import 'package:localsend_app/provider/app_arguments_provider.dart';
+import 'package:localsend_app/provider/chat_provider.dart';
 import 'package:localsend_app/provider/device_info_provider.dart';
 import 'package:localsend_app/provider/network/nearby_devices_provider.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/network/webrtc/signaling_provider.dart';
 import 'package:localsend_app/provider/persistence_provider.dart';
-// [FOSS_REMOVE_START]
 import 'package:localsend_app/provider/purchase_provider.dart';
-// [FOSS_REMOVE_END]
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/provider/tv_provider.dart';
@@ -30,6 +29,7 @@ import 'package:localsend_app/util/i18n.dart';
 import 'package:localsend_app/util/native/autostart_helper.dart';
 import 'package:localsend_app/util/native/cache_helper.dart';
 import 'package:localsend_app/util/native/channel/android_channel.dart';
+import 'package:localsend_app/util/native/chat_storage_helper.dart';
 import 'package:localsend_app/util/native/context_menu_helper.dart';
 import 'package:localsend_app/util/native/cross_file_converters.dart';
 import 'package:localsend_app/util/native/device_info_helper.dart';
@@ -54,6 +54,9 @@ import 'package:refena_flutter/refena_flutter.dart';
 import 'package:routerino/routerino.dart';
 import 'package:share_handler/share_handler.dart';
 import 'package:window_manager/window_manager.dart';
+
+// [FOSS_REMOVE_START]
+// [FOSS_REMOVE_END]
 
 final _logger = Logger('Init');
 
@@ -188,6 +191,13 @@ Future<RefenaContainer> preInit(List<String> args) async {
   );
 
   await container.redux(parentIsolateProvider).dispatchAsync(IsolateSetupAction());
+
+  try {
+    final path = await getChatDatabasePath(portable: persistenceService.isPortableMode());
+    await container.redux(chatProvider).dispatchAsync(InitChatAction(path));
+  } catch (_) {
+    // Storage errors must not disable file transfers or reset the database.
+  }
 
   return container;
 }

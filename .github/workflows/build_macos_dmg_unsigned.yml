@@ -1,0 +1,80 @@
+name: Build macOS dmg (unsigned)
+
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      ref:
+        description: Commit or tag to build (defaults to the triggering ref)
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+          persist-credentials: false
+
+      - name: Read version and Flutter pin
+        id: version
+        run: |
+          VERSION=$(sed -n 's/^version: \([^+]*\).*/\1/p' app/pubspec.yaml)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          python3 -c 'import json; print("flutter=" + json.load(open(".fvmrc"))["flutter"])' >> "$GITHUB_OUTPUT"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.version.outputs.flutter }}
+          channel: stable
+
+      - name: Install pinned Rust toolchain and universal targets
+        run: |
+          rustup toolchain install --profile minimal
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Dependencies
+        working-directory: app
+        run: flutter pub get
+
+      # Flutter forwards FLUTTER_XCODE_* variables to xcodebuild. Override the
+      # upstream Apple team for every target, including the share extension.
+      - name: Compile universal macOS app without signing credentials
+        working-directory: app
+        env:
+          FLUTTER_XCODE_CODE_SIGNING_ALLOWED: "NO"
+          FLUTTER_XCODE_CODE_SIGNING_REQUIRED: "NO"
+          FLUTTER_XCODE_DEVELOPMENT_TEAM: ""
+          FLUTTER_XCODE_ARCHS: "arm64 x86_64"
+          FLUTTER_XCODE_ONLY_ACTIVE_ARCH: "NO"
+        run: flutter build macos --release
+
+      - name: Package unsigned DMG
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          APP=app/build/macos/Build/Products/Release/LocalSend.app
+          test -d "$APP"
+          lipo -verify_arch arm64 x86_64 "$APP/Contents/MacOS/LocalSend"
+          # Apple Silicon requires ad-hoc signatures even without a Developer ID.
+          # No certificate, Apple account, signing secret or notarization is used.
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict "$APP"
+          mkdir -p dmg-root dist
+          ditto "$APP" dmg-root/LocalSend.app
+          ln -s /Applications dmg-root/Applications
+          hdiutil create -volname LocalSend -srcfolder dmg-root -ov -format UDZO \
+            "dist/LocalSend-$VERSION-macos-universal-unsigned.dmg"
+          hdiutil verify "dist/LocalSend-$VERSION-macos-universal-unsigned.dmg"
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: macos-dmg-universal-unsigned
+          path: dist/*.dmg
+          if-no-files-found: error

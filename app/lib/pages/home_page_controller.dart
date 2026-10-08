@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localsend_app/pages/home_page.dart';
+import 'package:localsend_app/provider/chat_provider.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 
 class HomePageVm {
@@ -15,10 +16,12 @@ class HomePageVm {
 }
 
 final homePageControllerProvider = ReduxProvider<HomePageController, HomePageVm>(
-  (ref) => HomePageController(),
+  (ref) => HomePageController(ref.notifier(chatProvider)),
 );
 
 class HomePageController extends ReduxNotifier<HomePageVm> {
+  final ChatService _chat;
+  HomePageController(this._chat);
   @override
   HomePageVm init() {
     return HomePageVm(
@@ -37,6 +40,7 @@ class ChangeTabAction extends ReduxAction<HomePageController, HomePageVm> {
   @override
   HomePageVm reduce() {
     state.controller.jumpToPage(tab.index);
+    external(notifier._chat).dispatch(ChatVisibilityAction(tab == HomeTab.messages));
     return HomePageVm(
       controller: state.controller,
       currentTab: tab,

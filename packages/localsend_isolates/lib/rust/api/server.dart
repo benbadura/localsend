@@ -36,6 +36,7 @@ Future<RsHttpServer> startServer({
   required String fingerprint,
   String? pin,
   required bool verifyChecksums,
+  required bool chatEnabled,
   required WebParams web,
   String? showToken,
 }) => RustLib.instance.api.crateApiServerStartServer(
@@ -48,6 +49,7 @@ Future<RsHttpServer> startServer({
   fingerprint: fingerprint,
   pin: pin,
   verifyChecksums: verifyChecksums,
+  chatEnabled: chatEnabled,
   web: web,
   showToken: showToken,
 );
@@ -86,6 +88,8 @@ abstract class RsHttpServer implements RustOpaqueInterface {
   /// Also returns when the Dart side of the stream is gone (e.g. after a
   /// hot restart), so this call does not keep the server alive forever.
   Stream<RsServerEvent> listen();
+
+  Future<void> respondChat({required String requestId, required int status, String? receiptJson});
 
   /// Answers the pending [RsServerEvent::WebFileDownload] event with the source
   /// the file content should be read from (either a path or a file descriptor).
@@ -173,6 +177,24 @@ class RegisterDtoV2 {
 @freezed
 sealed class RsServerEvent with _$RsServerEvent {
   const RsServerEvent._();
+
+  const factory RsServerEvent.chatMessage({
+    required String requestId,
+    required String ip,
+    required String fingerprint,
+    required RegisterDtoV2 info,
+    required String messageId,
+    required String text,
+    int? ttlSeconds,
+  }) = RsServerEvent_ChatMessage;
+  const factory RsServerEvent.chatStatus({
+    required String requestId,
+    required String fingerprint,
+    required String messageId,
+  }) = RsServerEvent_ChatStatus;
+  const factory RsServerEvent.chatRequestEnded({
+    required String requestId,
+  }) = RsServerEvent_ChatRequestEnded;
 
   /// A device registered itself via `POST /api/localsend/v2/register`.
   ///

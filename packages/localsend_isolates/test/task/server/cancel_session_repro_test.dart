@@ -52,6 +52,7 @@ void main() {
       deviceType: null,
       fingerprint: 'RECEIVER-FINGERPRINT',
       pin: null,
+      chatEnabled: false,
       verifyChecksums: true,
       web: const WebParams(
         mode: WebMode.disabled(),

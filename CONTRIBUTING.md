@@ -175,6 +175,27 @@ Suppose we want to update flutter to `3.41.9`:
 
 ### Release
 
+#### Unsigned desktop releases (fork)
+
+Publishing a GitHub release or prerelease runs `.github/workflows/release_unsigned.yml`.
+It builds the release tag on GitHub-hosted runners and attaches these assets to the existing release:
+
+- Windows x86-64: unsigned Inno Setup `.exe`.
+- macOS Intel and Apple Silicon: universal `.dmg`, without Developer ID signing or notarization.
+  The app uses a local ad-hoc signature required by Apple Silicon; the DMG is unsigned.
+- Linux x86-64: `.deb`.
+- `SHA256SUMS-unsigned.txt`: checksums of all three installers.
+
+No signing secrets or self-hosted runners are required. Only the upload job receives `contents: write`.
+The tag must match `app/pubspec.yaml` (without the build number) and the Inno Setup version, with an optional `v` prefix.
+Builds use the same resolved commit on all platforms, and assets are uploaded only after all builds succeed.
+
+To retry or build an existing draft release, run **Release unsigned desktop installers** from the Actions tab and enter its tag.
+Reruns replace assets with the same names. Saving a draft alone does not trigger the workflow; publishing it does.
+Include the workflows in the tagged commit, and enable Actions in the fork before publishing the release.
+
+#### Upstream signed release process
+
 Make sure to set up the self-hosted runner to compile arm64 linux binaries.
 
 To set up the runner, follow the following instructions:

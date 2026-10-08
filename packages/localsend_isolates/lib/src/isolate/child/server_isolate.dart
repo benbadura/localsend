@@ -33,6 +33,7 @@ class HttpServerStartTask implements BaseHttpServerTask {
   /// Whether the SHA-256 checksums that senders provide for their files are
   /// verified after receiving.
   final bool verifyChecksums;
+  final bool chatEnabled;
 
   /// Configures the pages served to browsers: the download page (web download),
   /// the upload page, or the 403 page when web share is disabled.
@@ -45,6 +46,7 @@ class HttpServerStartTask implements BaseHttpServerTask {
   HttpServerStartTask({
     required this.pin,
     required this.verifyChecksums,
+    this.chatEnabled = false,
     required this.web,
     required this.showToken,
   });
@@ -396,6 +398,8 @@ Future<void> setupHttpServerIsolate(
     },
     handler: (ref, task) async {
       switch (task.data) {
+        case HttpServerChatReplyTask reply:
+          await ref.read(httpServerProvider).respondChat(requestId: reply.requestId, status: reply.status, receiptJson: reply.receiptJson);
         case HttpServerStartTask startTask:
           final syncState = ref.read(syncProvider);
           final Stream<RsServerEvent> events;
@@ -417,6 +421,7 @@ Future<void> setupHttpServerIsolate(
                   fingerprint: syncState.securityContext.certificateHash,
                   pin: startTask.pin,
                   verifyChecksums: startTask.verifyChecksums,
+                  chatEnabled: startTask.chatEnabled,
                   web: startTask.web,
                   showToken: startTask.showToken,
                 );
@@ -452,6 +457,21 @@ Future<void> setupHttpServerIsolate(
             await for (final event in events) {
               final holder = ref.read(_receiveSessionProvider);
               switch (event) {
+                case RsServerEvent_ChatMessage(:final requestId, :final fingerprint, :final info, :final messageId, :final text, :final ttlSeconds):
+                  emit(
+                    HttpServerChatEvent(
+                      requestId: requestId,
+                      fingerprint: fingerprint,
+                      messageId: messageId,
+                      alias: info.alias,
+                      text: text,
+                      ttlSeconds: ttlSeconds,
+                    ),
+                  );
+                case RsServerEvent_ChatStatus(:final requestId, :final fingerprint, :final messageId):
+                  emit(HttpServerChatEvent(requestId: requestId, fingerprint: fingerprint, messageId: messageId));
+                case RsServerEvent_ChatRequestEnded(:final requestId):
+                  emit(HttpServerChatEndedEvent(requestId));
                 case RsServerEvent_Register(:final ip, :final info):
                   emit(HttpServerRegisterEvent(ip: ip, info: info));
                 case RsServerEvent_PrepareUpload(:final sessionId, :final ip, :final info, :final certFingerprint, :final files):
@@ -732,4 +752,28 @@ Future<void> _handleFileUpload({
     _logger.severe('Failed to post-process file', e, st);
     emitFailed(e);
   }
+}
+
+class HttpServerChatEvent extends HttpServerEvent {
+  final String requestId;
+  final String fingerprint;
+  final String messageId;
+  final String? alias;
+  final String? text;
+  final int? ttlSeconds;
+  HttpServerChatEvent({required this.requestId, required this.fingerprint, required this.messageId, this.alias, this.text, this.ttlSeconds});
+  @override
+  String toString() => 'HttpServerChatEvent(<redacted>)';
+}
+
+class HttpServerChatEndedEvent extends HttpServerEvent {
+  final String requestId;
+  HttpServerChatEndedEvent(this.requestId);
+}
+
+class HttpServerChatReplyTask implements BaseHttpServerTask {
+  final String requestId;
+  final int status;
+  final String? receiptJson;
+  HttpServerChatReplyTask({required this.requestId, required this.status, this.receiptJson});
 }

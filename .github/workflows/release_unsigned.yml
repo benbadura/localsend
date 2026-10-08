@@ -1,0 +1,113 @@
+name: Release unsigned desktop installers
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to build and attach installers to (e.g. v1.18.2)
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unsigned-release-${{ inputs.tag || github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      commit: ${{ steps.release.outputs.commit }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ inputs.tag || github.event.release.tag_name }}
+          persist-credentials: false
+
+      - name: Validate release and package versions
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" --json tagName --jq .tagName
+          VERSION=$(sed -n 's/^version: \([^+]*\).*/\1/p' app/pubspec.yaml)
+          INNO_VERSION=$(sed -n 's/^#define MyAppVersion "\([^"]*\)"/\1/p' support/scripts/compile_windows_exe-inno.iss)
+          if [[ -z "$VERSION" || "${RELEASE_TAG#v}" != "$VERSION" || "$INNO_VERSION" != "$VERSION" ]]; then
+            echo "Release tag, app/pubspec.yaml and Inno Setup versions must match."
+            exit 1
+          fi
+          echo "tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  windows:
+    needs: prepare
+    uses: ./.github/workflows/build_windows_exe_unsigned.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+
+  macos:
+    needs: prepare
+    uses: ./.github/workflows/build_macos_dmg_unsigned.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+
+  linux:
+    needs: prepare
+    uses: ./.github/workflows/build_linux_deb_x64.yml
+    with:
+      ref: ${{ needs.prepare.outputs.commit }}
+
+  upload:
+    needs: [prepare, windows, macos, linux]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Download Windows installer
+        uses: actions/download-artifact@v7
+        with:
+          name: windows-exe-x86-64-unsigned
+          path: artifacts/windows
+
+      - name: Download macOS installer
+        uses: actions/download-artifact@v7
+        with:
+          name: macos-dmg-universal-unsigned
+          path: artifacts/macos
+
+      - name: Download Linux installer
+        uses: actions/download-artifact@v7
+        with:
+          name: deb-x86-64-result
+          path: artifacts/linux
+
+      - name: Attach installers to the existing release
+        run: |
+          set -euo pipefail
+          mkdir release-assets
+          cp "artifacts/windows/LocalSend-$VERSION-windows-x86-64.exe" \
+            "release-assets/LocalSend-$VERSION-windows-x86-64-unsigned.exe"
+          cp "artifacts/macos/LocalSend-$VERSION-macos-universal-unsigned.dmg" release-assets/
+          shopt -s nullglob
+          DEBS=(artifacts/linux/*.deb)
+          [[ ${#DEBS[@]} -eq 1 ]]
+          cp "${DEBS[0]}" "release-assets/LocalSend-$VERSION-linux-x86-64.deb"
+          (cd release-assets && sha256sum *.exe *.dmg *.deb > SHA256SUMS-unsigned.txt)
+          gh release upload "$RELEASE_TAG" release-assets/* --clobber

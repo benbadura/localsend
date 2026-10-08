@@ -121,6 +121,7 @@ async fn start_tls_server_with_web(identity: &Identity, web: WebConfig) -> TestS
         },
         None,
         Some(ServerConfigV2 {
+            chat_enabled: false,
             pin: None,
             verify_checksums: true,
             event_tx,

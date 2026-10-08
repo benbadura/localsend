@@ -1,4 +1,5 @@
 import 'package:dart_mappable/dart_mappable.dart';
+import 'package:localsend_isolates/src/isolate/child/chat_isolate.dart';
 import 'package:localsend_isolates/src/isolate/child/discovery_isolate.dart';
 import 'package:localsend_isolates/src/isolate/child/main.dart';
 import 'package:localsend_isolates/src/isolate/child/server_isolate.dart';
@@ -17,12 +18,14 @@ part 'parent_isolate_provider.mapper.dart';
 @MappableClass()
 class ParentIsolateState with ParentIsolateStateMappable {
   final SyncState syncState;
+  final IsolateConnector<IsolateTaskStreamResult<ChatResult>, SendToIsolateData<IsolateTask<ChatTask>>>? chat;
   final IsolateConnector<IsolateTaskStreamResult<DiscoveryResult>, SendToIsolateData<IsolateTask<DiscoveryTask>>>? discovery;
   final IsolateConnector<IsolateTaskStreamResult<HttpUploadEvent>, SendToIsolateData<IsolateTask<BaseHttpUploadTask>>>? httpUpload;
   final IsolateConnector<IsolateTaskStreamResult<HttpServerEvent>, SendToIsolateData<IsolateTask<BaseHttpServerTask>>>? httpServer;
 
   ParentIsolateState({
     required this.syncState,
+    this.chat,
     required this.discovery,
     required this.httpUpload,
     required this.httpServer,
@@ -61,6 +64,10 @@ class IsolateController extends ReduxNotifier<ParentIsolateState> {
 class IsolateSetupAction extends AsyncReduxAction<IsolateController, ParentIsolateState> {
   @override
   Future<ParentIsolateState> reduce() async {
+    final chat = await TypedIsolates.startIsolate<IsolateTaskStreamResult<ChatResult>, SendToIsolateData<IsolateTask<ChatTask>>, InitialData>(
+      task: setupChatIsolate,
+      param: InitialData(syncState: state.syncState, logLevel: Logger.root.level),
+    );
     final discovery =
         await TypedIsolates.startIsolate<IsolateTaskStreamResult<DiscoveryResult>, SendToIsolateData<IsolateTask<DiscoveryTask>>, InitialData>(
           task: setupDiscoveryIsolate,
@@ -89,6 +96,7 @@ class IsolateSetupAction extends AsyncReduxAction<IsolateController, ParentIsola
         );
 
     return state.copyWith(
+      chat: chat,
       discovery: discovery,
       httpUpload: httpUpload,
       httpServer: httpServer,
@@ -99,6 +107,7 @@ class IsolateSetupAction extends AsyncReduxAction<IsolateController, ParentIsola
 class IsolateDisposeAction extends ReduxAction<IsolateController, ParentIsolateState> {
   @override
   ParentIsolateState reduce() {
+    state.chat?.isolate.kill();
     state.discovery?.isolate.kill();
     state.httpUpload?.isolate.kill();
     state.httpServer?.isolate.kill();

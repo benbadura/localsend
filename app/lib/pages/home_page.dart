@@ -6,9 +6,11 @@ import 'package:localsend_app/config/init.dart';
 import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/pages/home_page_controller.dart';
+import 'package:localsend_app/pages/tabs/messages_tab.dart';
 import 'package:localsend_app/pages/tabs/receive_tab.dart';
 import 'package:localsend_app/pages/tabs/send_tab.dart';
 import 'package:localsend_app/pages/tabs/settings_tab.dart';
+import 'package:localsend_app/provider/chat_provider.dart';
 import 'package:localsend_app/provider/selection/selected_sending_files_provider.dart';
 import 'package:localsend_app/util/native/cross_file_converters.dart';
 import 'package:localsend_app/widget/responsive_builder.dart';
@@ -17,6 +19,7 @@ import 'package:refena_flutter/refena_flutter.dart';
 enum HomeTab {
   receive(Icons.wifi),
   send(Icons.send),
+  messages(Icons.chat_bubble_outline),
   settings(Icons.settings)
   ;
 
@@ -30,6 +33,8 @@ enum HomeTab {
         return t.receiveTab.title;
       case HomeTab.send:
         return t.sendTab.title;
+      case HomeTab.messages:
+        return t.chat.title;
       case HomeTab.settings:
         return t.settingsTab.title;
     }
@@ -70,6 +75,9 @@ class _HomePageState extends State<HomePage> with Refena {
   Widget build(BuildContext context) {
     Translations.of(context); // rebuild on locale change
     final vm = context.watch(homePageControllerProvider);
+    final unread = context.watch(chatProvider.select((state) => state.conversations.fold<int>(0, (total, chat) => total + chat.unread)));
+    Widget tabIcon(HomeTab tab) =>
+        tab == HomeTab.messages ? Badge(isLabelVisible: unread > 0, label: Text('$unread'), child: Icon(tab.icon)) : Icon(tab.icon);
 
     return DropTarget(
       onDragEntered: (_) {
@@ -129,7 +137,7 @@ class _HomePageState extends State<HomePage> with Refena {
                         : null,
                     destinations: HomeTab.values.map((tab) {
                       return NavigationRailDestination(
-                        icon: Icon(tab.icon),
+                        icon: tabIcon(tab),
                         label: Text(tab.label),
                       );
                     }).toList(),
@@ -145,6 +153,7 @@ class _HomePageState extends State<HomePage> with Refena {
                           children: const [
                             ReceiveTab(),
                             SendTab(),
+                            MessagesTab(),
                             SettingsTab(),
                           ],
                         ),
@@ -174,7 +183,7 @@ class _HomePageState extends State<HomePage> with Refena {
                     selectedIndex: vm.currentTab.index,
                     onDestinationSelected: (index) => vm.changeTab(HomeTab.values[index]),
                     destinations: HomeTab.values.map((tab) {
-                      return NavigationDestination(icon: Icon(tab.icon), label: tab.label);
+                      return NavigationDestination(icon: tabIcon(tab), label: tab.label);
                     }).toList(),
                   )
                 : null,

@@ -16,6 +16,58 @@ pub struct LsHttpClientV2 {
 }
 
 impl LsHttpClientV2 {
+    pub async fn chat_info(
+        &self,
+        ip: &str,
+        port: u16,
+    ) -> Result<crate::http::chat::ChatCapabilities, ClientError> {
+        let res = self
+            .client
+            .get(chat_url(ip, port, "/info"))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await?;
+        chat_response(res).await
+    }
+    pub async fn chat_send(
+        &self,
+        ip: &str,
+        port: u16,
+        message: crate::http::chat::ChatMessageRequest,
+    ) -> Result<crate::http::chat::ChatReceipt, ClientError> {
+        let res = self
+            .client
+            .post(chat_url(ip, port, "/messages"))
+            .timeout(std::time::Duration::from_secs(125))
+            .json(&message)
+            .send()
+            .await?;
+        chat_response(res).await
+    }
+    pub async fn chat_status(
+        &self,
+        ip: &str,
+        port: u16,
+        message_id: &str,
+    ) -> Result<Option<crate::http::chat::ChatReceipt>, ClientError> {
+        uuid::Uuid::parse_str(message_id)
+            .map_err(|_| ClientError::Other(anyhow::anyhow!("Invalid message ID")))?;
+        let res = self
+            .client
+            .get(format!(
+                "{}/{}",
+                chat_url(ip, port, "/messages"),
+                message_id
+            ))
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await?;
+        if res.status() == StatusCode::NOT_FOUND {
+            return Ok(None);
+        }
+        Ok(Some(chat_response(res).await?))
+    }
+
     /// Creates a new HTTP client for v2.2 protocol.
     ///
     /// # Arguments
@@ -481,4 +533,39 @@ impl LsHttpClientV2 {
 
         Ok(total_bytes)
     }
+}
+
+fn chat_url(ip: &str, port: u16, path: &'static str) -> String {
+    TargetUrl {
+        version: ApiVersion::ChatV1,
+        protocol: "https",
+        host: ip.to_owned(),
+        port,
+        path,
+        params: &[],
+    }
+    .to_string()
+}
+
+async fn chat_response<T: serde::de::DeserializeOwned>(
+    response: Response,
+) -> Result<T, ClientError> {
+    if !response.status().is_success() {
+        return Err(ClientError::StatusCode(crate::http::StatusCodeError {
+            status: response.status().as_u16(),
+            message: None,
+        }));
+    }
+    let mut stream = response.bytes_stream();
+    let mut bytes = Vec::new();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        if bytes.len() + chunk.len() > 16 * 1024 {
+            return Err(ClientError::Other(anyhow::anyhow!(
+                "Chat response too large"
+            )));
+        }
+        bytes.extend_from_slice(&chunk);
+    }
+    Ok(serde_json::from_slice(&bytes)?)
 }

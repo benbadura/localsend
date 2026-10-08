@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localsend_app/config/init.dart';
@@ -6,6 +8,7 @@ import 'package:localsend_app/config/theme.dart';
 import 'package:localsend_app/gen/strings.g.dart';
 import 'package:localsend_app/model/persistence/color_mode.dart';
 import 'package:localsend_app/pages/home_page.dart';
+import 'package:localsend_app/provider/chat_provider.dart';
 import 'package:localsend_app/provider/local_ip_provider.dart';
 import 'package:localsend_app/provider/network/server/server_provider.dart';
 import 'package:localsend_app/provider/settings_provider.dart';
@@ -62,6 +65,7 @@ class LocalSendApp extends StatelessWidget {
           onChangedState: (AppLifecycleState state) {
             switch (state) {
               case AppLifecycleState.resumed:
+                unawaited(ref.redux(chatProvider).dispatchAsync(RefreshChatAction()));
                 ref.redux(localIpProvider).dispatch(InitLocalIpAction());
                 if (checkPlatform([TargetPlatform.iOS, TargetPlatform.android])) {
                   // The OS may have invalidated the sockets of the suspended app without any error ever reaching the accept loop.
@@ -74,6 +78,7 @@ class LocalSendApp extends StatelessWidget {
                 }
                 break;
               case AppLifecycleState.detached:
+                ref.dispose(chatProvider);
                 // The main isolate is only exited when all child isolates are exited.
                 // https://github.com/localsend/localsend/issues/1568
                 ref.redux(parentIsolateProvider).dispatch(IsolateDisposeAction());

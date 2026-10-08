@@ -116,6 +116,8 @@ pub(super) enum Answer {
 impl App {
     pub(super) fn handle_server_event(&mut self, event: ServerEventV2) {
         match event {
+            ServerEventV2::ChatMessage { reply_tx, .. } | ServerEventV2::ChatStatus { reply_tx, .. } => { let _ = reply_tx.send(localsend::http::chat::ChatReply { status: 404, receipt: None }); }
+            ServerEventV2::ChatRequestEnded { .. } => {}
             ServerEventV2::Register { ip, info } => {
                 self.device_confirmed(ip.to_string(), info);
             }
