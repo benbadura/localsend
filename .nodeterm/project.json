@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "rev": 587,
-  "savedAt": "2026-10-13T12:43:37.880Z",
+  "rev": 652,
+  "savedAt": "2026-10-13T12:48:52.383Z",
   "id": "project-tjcohy",
   "name": "localsend",
   "color": "#ff453a",
@@ -36,7 +36,7 @@
     {
       "id": "term-mv6ny6vv-8025c769",
       "createdAt": 1791894885979,
-      "lastActivityAt": 1791895417494,
+      "lastActivityAt": 1791895730567,
       "kind": "terminal",
       "position": {
         "x": 1068.4988124975196,
