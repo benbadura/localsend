@@ -1,20 +1,20 @@
 {
   "version": 1,
-  "rev": 239,
-  "savedAt": "2026-10-13T11:50:11.537Z",
+  "rev": 587,
+  "savedAt": "2026-10-13T12:43:37.880Z",
   "id": "project-tjcohy",
   "name": "localsend",
   "color": "#ff453a",
   "viewport": {
     "x": 78.90647549372898,
-    "y": 504.3074698137751,
+    "y": 544.2973341070546,
     "zoom": 1
   },
   "nodes": [
     {
       "id": "term-muzj2am8-65aa23ba",
       "createdAt": 1791463416128,
-      "lastActivityAt": 1791890653205,
+      "lastActivityAt": 1791894881929,
       "kind": "terminal",
       "position": {
         "x": 1.0935245062710237,
@@ -34,13 +34,13 @@
       "agentId": "codex"
     },
     {
-      "id": "term-mv6lf5wp-d0b1cadf",
-      "createdAt": 1791890639017,
-      "lastActivityAt": 1791892209876,
+      "id": "term-mv6ny6vv-8025c769",
+      "createdAt": 1791894885979,
+      "lastActivityAt": 1791895417494,
       "kind": "terminal",
       "position": {
-        "x": 1232.4668288511707,
-        "y": -424.3074698137751
+        "x": 1068.4988124975196,
+        "y": -464.29733410705455
       },
       "size": {
         "width": 640,

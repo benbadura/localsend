@@ -587,6 +587,8 @@ class _Translations$dialogs$pl extends Translations$dialogs$en {
 
   // Translations
   @override
+  late final _Translations$dialogs$closeWindow$pl closeWindow = _Translations$dialogs$closeWindow$pl._(_root);
+  @override
   late final _Translations$dialogs$addFile$pl addFile = _Translations$dialogs$addFile$pl._(_root);
   @override
   late final _Translations$dialogs$openFile$pl openFile = _Translations$dialogs$openFile$pl._(_root);
@@ -1213,6 +1215,23 @@ class _Translations$whatsNewPage$changes$pl extends Translations$whatsNewPage$ch
   // Translations
   @override
   late final _Translations$whatsNewPage$changes$v1_18_0$pl v1_18_0 = _Translations$whatsNewPage$changes$v1_18_0$pl._(_root);
+}
+
+// Path: dialogs.closeWindow
+class _Translations$dialogs$closeWindow$pl extends Translations$dialogs$closeWindow$en {
+  _Translations$dialogs$closeWindow$pl._(TranslationsPl root) : this._root = root, super.internal(root);
+
+  final TranslationsPl _root; // ignore: unused_field
+
+  // Translations
+  @override
+  String get title => 'Zamknąć LocalSend?';
+  @override
+  String get content => 'Czy zakończyć LocalSend, czy pozostawić aplikację działającą w tle?';
+  @override
+  String get minimizeToTray => 'Ukryj w trayu';
+  @override
+  String get minimizeToMenuBar => 'Ukryj na pasku menu';
 }
 
 // Path: dialogs.addFile

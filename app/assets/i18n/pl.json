@@ -336,6 +336,12 @@
     "@info": "Inherits from the English version"
   },
   "dialogs": {
+    "closeWindow": {
+      "title": "Zamknąć LocalSend?",
+      "content": "Czy zakończyć LocalSend, czy pozostawić aplikację działającą w tle?",
+      "minimizeToTray": "Ukryj w trayu",
+      "minimizeToMenuBar": "Ukryj na pasku menu"
+    },
     "addFile": {
       "title": "Dodaj do wyboru",
       "content": "Co chcesz dodać?"

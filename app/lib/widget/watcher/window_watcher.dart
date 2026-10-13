@@ -6,7 +6,9 @@ import 'package:localsend_app/provider/settings_provider.dart';
 import 'package:localsend_app/provider/window_dimensions_provider.dart';
 import 'package:localsend_app/util/native/platform_check.dart';
 import 'package:localsend_app/util/native/tray_helper.dart';
+import 'package:localsend_app/widget/dialogs/close_window_dialog.dart';
 import 'package:logging/logging.dart';
+import 'package:refena_flutter/addons.dart';
 import 'package:refena_flutter/refena_flutter.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -30,7 +32,8 @@ class WindowWatcher extends StatefulWidget {
 }
 
 class _WindowWatcherState extends State<WindowWatcher> with WindowListener, Refena {
-  static WindowDimensionsController? _dimensionsController;
+  WindowDimensionsController? _dimensionsController;
+  bool _handlingClose = false;
   static Stopwatch s = Stopwatch();
 
   WindowDimensionsController _ensureDimensionsProvider() => ref.watch(windowDimensionProvider);
@@ -89,16 +92,36 @@ class _WindowWatcherState extends State<WindowWatcher> with WindowListener, Refe
 
   @override
   Future<void> onWindowClose() async {
-    final windowOffset = await windowManager.getPosition();
-    final windowSize = await windowManager.getSize();
-    await _dimensionsController?.storeDimensions(windowOffset: windowOffset, windowSize: windowSize);
-
-    if (!checkPlatformIsDesktop()) {
+    if (!checkPlatformIsDesktop() || !mounted || _handlingClose) {
       return;
     }
 
+    _handlingClose = true;
     try {
-      if (ref.read(settingsProvider).minimizeToTray) {
+      final CloseWindowAction? action;
+      if (checkPlatform([TargetPlatform.windows, TargetPlatform.macOS])) {
+        // WindowWatcher is above MaterialApp, so use the navigator's context.
+        final navigatorContext = ref.read(navigationProvider).key.currentContext;
+        if (navigatorContext == null) {
+          return;
+        }
+        action = await showDialog<CloseWindowAction>(
+          context: navigatorContext,
+          builder: (_) => const CloseWindowDialog(),
+        );
+      } else {
+        action = ref.read(settingsProvider).minimizeToTray ? CloseWindowAction.hide : CloseWindowAction.quit;
+      }
+
+      if (!mounted || action == null) {
+        return;
+      }
+
+      final windowOffset = await windowManager.getPosition();
+      final windowSize = await windowManager.getSize();
+      await _dimensionsController?.storeDimensions(windowOffset: windowOffset, windowSize: windowSize);
+
+      if (action == CloseWindowAction.hide) {
         await hideToTray();
       } else {
         await destroyTray();
@@ -106,6 +129,8 @@ class _WindowWatcherState extends State<WindowWatcher> with WindowListener, Refe
       }
     } catch (e) {
       _logger.warning('Failed to close window', e);
+    } finally {
+      _handlingClose = false;
     }
   }
 

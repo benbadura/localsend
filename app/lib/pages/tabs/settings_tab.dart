@@ -110,7 +110,7 @@ class SettingsTab extends StatelessWidget {
                         await ref.notifier(settingsProvider).setSaveWindowPlacement(b);
                       },
                     ),
-                  if (checkPlatformHasTray()) ...[
+                  if (checkPlatform([TargetPlatform.linux])) ...[
                     _BooleanEntry(
                       label: t.settingsTab.general.minimizeToTray,
                       value: vm.settings.minimizeToTray,

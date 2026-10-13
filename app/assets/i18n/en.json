@@ -408,6 +408,12 @@
     "@combination": "In some languages, the adjective must be last."
   },
   "dialogs": {
+    "closeWindow": {
+      "title": "Close LocalSend?",
+      "content": "Quit LocalSend or keep it running in the background?",
+      "minimizeToTray": "Minimize to system tray",
+      "minimizeToMenuBar": "Minimize to menu bar"
+    },
     "addFile": {
       "title": "Add to selection",
       "content": "What do you want to add?"

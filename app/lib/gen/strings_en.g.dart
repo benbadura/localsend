@@ -756,6 +756,7 @@ class Translations$dialogs$en {
   final Translations _root; // ignore: unused_field
 
   // Translations
+  late final Translations$dialogs$closeWindow$en closeWindow = Translations$dialogs$closeWindow$en.internal(_root);
   late final Translations$dialogs$addFile$en addFile = Translations$dialogs$addFile$en.internal(_root);
   late final Translations$dialogs$openFile$en openFile = Translations$dialogs$openFile$en.internal(_root);
   late final Translations$dialogs$addressInput$en addressInput = Translations$dialogs$addressInput$en.internal(_root);
@@ -1534,6 +1535,27 @@ class Translations$whatsNewPage$changes$en {
 
   // Translations
   late final Translations$whatsNewPage$changes$v1_18_0$en v1_18_0 = Translations$whatsNewPage$changes$v1_18_0$en.internal(_root);
+}
+
+// Path: dialogs.closeWindow
+class Translations$dialogs$closeWindow$en {
+  Translations$dialogs$closeWindow$en.internal(this._root);
+
+  final Translations _root; // ignore: unused_field
+
+  // Translations
+
+  /// en: 'Close LocalSend?'
+  String get title => 'Close LocalSend?';
+
+  /// en: 'Quit LocalSend or keep it running in the background?'
+  String get content => 'Quit LocalSend or keep it running in the background?';
+
+  /// en: 'Minimize to system tray'
+  String get minimizeToTray => 'Minimize to system tray';
+
+  /// en: 'Minimize to menu bar'
+  String get minimizeToMenuBar => 'Minimize to menu bar';
 }
 
 // Path: dialogs.addFile
