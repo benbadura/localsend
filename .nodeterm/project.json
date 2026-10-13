@@ -1,22 +1,24 @@
 {
   "version": 1,
-  "rev": 13,
-  "savedAt": "2026-10-08T16:22:34.720Z",
+  "rev": 191,
+  "savedAt": "2026-10-13T11:29:14.334Z",
   "id": "project-tjcohy",
   "name": "localsend",
   "color": "#ff453a",
   "viewport": {
-    "x": 428.9855072463768,
-    "y": 394.2028985507246,
+    "x": 78.90647549372898,
+    "y": 504.3074698137751,
     "zoom": 1
   },
   "nodes": [
     {
       "id": "term-muzj2am8-65aa23ba",
+      "createdAt": 1791463416128,
+      "lastActivityAt": 1791890653205,
       "kind": "terminal",
       "position": {
-        "x": 430,
-        "y": -45
+        "x": 1.0935245062710237,
+        "y": -214.65102930392624
       },
       "size": {
         "width": 870,
@@ -32,21 +34,26 @@
       "agentId": "codex"
     },
     {
-      "id": "term-muzqvvst-19133055",
+      "id": "term-mv6lf5wp-d0b1cadf",
+      "createdAt": 1791890639017,
+      "lastActivityAt": 1791890954297,
       "kind": "terminal",
       "position": {
-        "x": -348.9855072463768,
-        "y": -314.2028985507246
+        "x": 1232.4668288511707,
+        "y": -424.3074698137751
       },
       "size": {
         "width": 640,
         "height": 440
       },
-      "title": "Terminal 2",
-      "color": "#32d74b",
+      "title": "Codex",
+      "titleAuto": true,
+      "color": "#10a37f",
       "group": null,
       "tags": [],
-      "cwd": "."
+      "collapsed": false,
+      "cwd": ".",
+      "agentId": "codex"
     }
   ],
   "bridges": [],
